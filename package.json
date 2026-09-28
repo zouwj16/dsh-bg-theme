@@ -1,0 +1,47 @@
+{
+  "name": "@local/dsh-bg-theme",
+  "version": "1.0.1",
+  "private": true,
+  "description": "Warm dark/light palette overlay for the Harness Web UI: recolours the canvas, side column, cards, controls, code blocks and popover material, in a light and a dark variant",
+  "license": "MIT",
+  "type": "module",
+  "icon": "./icon.svg",
+  "engines": {
+    "dsh": ">=0.1.7-rc.2"
+  },
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./package.json": "./package.json",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./locale/*.json": "./locale/*.json",
+    "./icon.svg": "./icon.svg"
+  },
+  "files": [
+    "client.js",
+    "index.js",
+    "cordis.patch.yml",
+    "icon.svg",
+    "LICENSE",
+    "AGENTS.md",
+    "locale/*.json",
+    "measure/*.py",
+    "measure/*.mjs",
+    "measure/*.yml",
+    "README.md",
+    "palette.png"
+  ],
+  "dsh": {
+    "manifestVersion": 1,
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-theme"
+      ]
+    }
+  }
+}

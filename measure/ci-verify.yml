@@ -1,0 +1,23 @@
+# CI 模板：把它复制到 .github/workflows/verify.yml 即可在 GitHub 上自动跑自检。
+#
+# 它没有直接放在 .github/workflows/ 下，是因为推送 workflow 文件需要令牌具备
+# workflow 权限（gh 默认的 repo 权限不含它）：
+#   gh auth refresh -s workflow      # 授予后再把本文件复制过去即可
+# 也可以在 GitHub 网页端新建该文件、把下面内容粘进去（网页端不需要该权限）。
+#
+name: verify
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  palette:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify the plugin package and palette
+        run: node measure/verify-palette.mjs

@@ -1,0 +1,6 @@
+# Bundle patch: insert this bundle's own row into the profile composition.
+# The id is the row's address for later overrides; the name is the plugin module
+# and must match the package name so the Client half resolves to this package.
+- insert:
+    - id: bg-theme
+      name: '@local/dsh-bg-theme'

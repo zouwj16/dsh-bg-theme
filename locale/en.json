@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Interface palette (warm)",
+    "description": "Repaints the interface with values measured off Claude's dark theme: canvas, side column, cards, code blocks, scrollbars and ink, in a light and a dark variant"
+  }
+}

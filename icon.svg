@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Warm interface palette">
+  <!-- The plugin's own tones: a light canvas band over a dark one, split by the
+       mid ink line, with two swatches of the ink ramp below. -->
+  <rect x="2" y="2" width="60" height="60" rx="14" fill="#151515"/>
+  <path d="M16 2h32a14 14 0 0 1 14 14v18H2V16A14 14 0 0 1 16 2z" fill="#f0eee6"/>
+  <rect x="2" y="34" width="60" height="3" fill="#c3c2b7"/>
+  <circle cx="24" cy="48" r="6" fill="#f0efec"/>
+  <circle cx="41" cy="48" r="6" fill="#a8a69b"/>
+</svg>
