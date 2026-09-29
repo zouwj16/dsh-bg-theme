@@ -12,6 +12,7 @@
  *   5. the patch inserts exactly one row, named after this package
  *   6. the locale dictionaries agree on their key set and the icon exists
  *   7. README's palette table matches client.js exactly (no hand-typed drift)
+ *   8. the enabled CI workflow is the same file as its shipped template
  *
  * What it cannot check without a DSH installation: whether each token name
  * really exists in the product's stylesheets, and whether the alpha of a
@@ -129,6 +130,16 @@ check('README documents every palette token', documented.size === names.length, 
 const drifted = names.filter((n) => !documented.has(n) || documented.get(n).light !== tokens[n].light || documented.get(n).dark !== tokens[n].dark)
 check('README hex values match client.js', drifted.length === 0, drifted.join(', '))
 check('README names the install targets', /github\.com\/[\w-]+\/[\w-]+/.test(readme), 'install spec present')
+
+// ------------------------------------------- 8. CI workflow matches its template
+// The workflow is enabled at .github/workflows/verify.yml while measure/ci-verify.yml
+// stays as the copy other repositories start from; they must not drift apart. The
+// check is skipped where the workflow is absent (a packed tarball, a fork without it).
+const workflowPath = path.join(root, '.github', 'workflows', 'verify.yml')
+if (fs.existsSync(workflowPath)) {
+  const template = fs.readFileSync(path.join(root, 'measure', 'ci-verify.yml'), 'utf8')
+  check('the CI workflow is the same file as its template', fs.readFileSync(workflowPath, 'utf8') === template)
+}
 
 // ------------------------------------------------------------------- report
 console.log(notes.join('\n'))

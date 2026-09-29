@@ -41,7 +41,7 @@ kind: "dsh-bundle-plugin"
 | `locale/{zh,en}.json` | 插件页卡片上的标题与描述 |
 | `icon.svg` | 插件页卡片图标 |
 | `palette.png` | 本套配色的示意（文档） |
-| `measure/` | 取值与 revision 的复现脚本、零依赖自检 `verify-palette.mjs`、CI 模板 `ci-verify.yml`（见 `AGENTS.md`） |
+| `measure/` | 取值与 revision 的复现脚本、零依赖自检 `verify-palette.mjs`、CI（已启用在 `.github/workflows/verify.yml`，同一份内容保留为模板 `ci-verify.yml`，见 `AGENTS.md`） |
 | `measure/patch-window-base.mjs` | 可选：给已安装的 Windows 客户端补上原生窗口底色（消除呼出时的白闪），等长改写 `app.asar`，带 `--verify` / `--revert` / `--self-test` |
 | `LICENSE` | MIT |
 
