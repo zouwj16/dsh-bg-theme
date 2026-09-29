@@ -1,5 +1,5 @@
 ---
-description: "Harness Web UI 的暖色配色 bundle 插件：以主题 token 覆盖层重绘画布、侧栏、卡片、控件、代码块与浮层材质，浅深两套；含无人值守安装契约。"
+description: "Harness Web UI 的暖色配色 bundle 插件：以主题 token 覆盖层重绘画布、侧栏、卡片、控件、代码块与浮层材质，浅深两套；含无人值守安装契约，以及 Windows 原生窗口底色的白闪修复脚本。"
 kind: "dsh-bundle-plugin"
 ---
 
@@ -42,6 +42,7 @@ kind: "dsh-bundle-plugin"
 | `icon.svg` | 插件页卡片图标 |
 | `palette.png` | 本套配色的示意（文档） |
 | `measure/` | 取值与 revision 的复现脚本、零依赖自检 `verify-palette.mjs`、CI 模板 `ci-verify.yml`（见 `AGENTS.md`） |
+| `measure/patch-window-base.mjs` | 可选：给已安装的 Windows 客户端补上原生窗口底色（消除呼出时的白闪），等长改写 `app.asar`，带 `--verify` / `--revert` / `--self-test` |
 | `LICENSE` | MIT |
 
 ## 安装
@@ -265,9 +266,40 @@ pnpm 落地这个依赖的方式是**硬链接或目录副本**（实测两处 `
 
 Anthropic 自己用的 Styrene / Tiempos 是商业字体，本机没有；最接近的开源替代是 Inter，需要先装字体再按上面这行接进来。
 
+## 原生窗口底色（Windows 白闪修复）
+
+Windows 客户端的主窗口在创建时没有 `backgroundColor`，原生底色就是 Electron 的默认白色。只要窗口在 Chromium 提交新帧之前被系统"露出来"——点任务栏还原的窗口动画、从托盘呼出的显示动画、隐藏后重建表面——白底就会闪一下。**这一处插件改不了**：bundle 插件跑在渲染/宿主进程，只能覆盖 CSS token，够不到原生窗口。
+
+`measure/patch-window-base.mjs` 用等长就地改写把它修掉，改的是**已安装客户端的 `app.asar`**，不是本仓库的插件代码：
+
+```powershell
+$node = "$env:USERPROFILE\.dsh\dsh-runtimes\dsh-primary-runtime\dependencies\node\bin\node.exe"
+& $node measure/patch-window-base.mjs             # 干跑：只打印计划，不写任何东西
+& $node measure/patch-window-base.mjs --apply     # 打补丁，并写下回滚状态
+& $node measure/patch-window-base.mjs --verify    # 全归档逐块 SHA-256 校验
+& $node measure/patch-window-base.mjs --revert    # 干跑回滚；加 --apply 才写回
+& $node measure/patch-window-base.mjs --self-test # 不装 DSH 也能跑的夹具自检
+```
+
+两处改动都在 `lib/main.js`：
+
+1. Windows 主窗口创建时给出不透明底色（与标题栏 overlay 同一个 `chromeFallbackFill()`）；
+2. `windowsAppearance` 这条 IPC 本来就负责把渲染进程实测的侧栏底色交给主进程（标题栏在用），现在同一个值也同步给窗口底色——所以装上本插件后闪的是本插件的 `#111111` / `#e9e6dc`，换任何主题都会跟着走，不用改脚本。
+
+`lib/main.js` 写入前后字节数完全相同（插入的字节从 `chromeFallbackFill()` 上方那段注释里等量扣除），归档索引偏移全部不变，归档头中该文件的 SHA-256 同步更新；除这两处与那一段注释外，归档逐字节不变。
+
+注意：
+
+- 需要**重启 DeepSeek Harness**（托盘图标 → 退出应用，再启动）才生效。
+- 回滚状态在 `<app.asar>.window-base-backup\`（`header.bin` / `main.js.bin` / `state.json`，约 3.9 MB）。`--revert` 只在当前 `lib/main.js` 与记录相符时才写回，被升级换过的归档会拒绝覆盖。
+- **DSH 升级会换掉 `app.asar`**，补丁随之消失：升级后重跑一次 `--apply`；`--verify` 会告诉你补丁还在不在。
+- 只对 Windows 客户端有意义；macOS 客户端本来就是透明底 + vibrancy，不需要。
+- 脚本靠 `lib/main.js` 里的锚点工作，锚点变了（产品改动）它会报错退出，不会瞎改。
+
 ## 已知边界
 
 - **不是持久化的主题偏好。** 覆盖层不进 `ui-theme` 的 settings schema，每次加载由插件重新叠加；设置里的浅色/深色/字号仍然有效，并决定哪一套值生效。
 - **浅色方案是推导值。** 深色量的是一张 Claude 截图，浅色是按同一暖色系推的，没有对应截图可核。
 - **未做视觉验证。** 本插件是离线核对的产物（清单、YAML、token 名、对比度、明度阶梯都过了脚本检查），没有在运行中的页面上目视确认过。若某处观感不对，改 `PALETTE` 里对应的 token 即可。
 - **只覆盖颜色。** 字体族、字号仍归内置 `ui-theme` 的字号设置与 `--dsw-font-family`。
+- **原生窗口底色不在插件范围内。** 白闪只能靠 `measure/patch-window-base.mjs` 改已安装客户端的 `app.asar`，而且产品升级会覆盖它；插件半侧永远够不到原生窗口。
