@@ -303,3 +303,4 @@ $node = "$env:USERPROFILE\.dsh\dsh-runtimes\dsh-primary-runtime\dependencies\nod
 - **未做视觉验证。** 本插件是离线核对的产物（清单、YAML、token 名、对比度、明度阶梯都过了脚本检查），没有在运行中的页面上目视确认过。若某处观感不对，改 `PALETTE` 里对应的 token 即可。
 - **只覆盖颜色。** 字体族、字号仍归内置 `ui-theme` 的字号设置与 `--dsw-font-family`。
 - **原生窗口底色不在插件范围内。** 白闪只能靠 `measure/patch-window-base.mjs` 改已安装客户端的 `app.asar`，而且产品升级会覆盖它；插件半侧永远够不到原生窗口。
+- **补丁只覆盖产品主窗口。** `createWindow()` 全产品只被调用一次（就是那个主窗口）；欢迎窗和浮层本来就自带底色。企业 policy 的登录窗（`lib/main.js` 里带 `policyLoginTitle` 的那处 `new BrowserWindow`）没有底色，仍会闪一下——它只在配置了 policy 的登录流程里出现一次，所以按边界处理、没有纳入补丁。要覆盖它就是在仓库脚本的 `EDITS` 里再加一条同样形状的等长改动。
