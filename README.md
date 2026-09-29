@@ -296,6 +296,27 @@ $node = "$env:USERPROFILE\.dsh\dsh-runtimes\dsh-primary-runtime\dependencies\nod
 - 只对 Windows 客户端有意义；macOS 客户端本来就是透明底 + vibrancy，不需要。
 - 脚本靠 `lib/main.js` 里的锚点工作，锚点变了（产品改动）它会报错退出，不会瞎改。
 
+### 升级后自动重打（可选）
+
+想让补丁在升级后自己回来，就把它挂成计划任务。两个要点：
+
+- **只挂"登录时"不够**：产品在**同一次会话里就地升级并重启**时没有登录事件，所以要再加一条定时重复。工具是幂等的，重复执行只是读一遍归档、发现无事可做就退出。
+- 把 `--apply` 包成一个小脚本（例如 `%LOCALAPPDATA%\dsh-window-base\reapply.ps1`，内部调用 `node measure/patch-window-base.mjs --apply --json`），失败或"确实补了"时把输出追加到一个日志文件，平时保持安静。用 `Start-Process -RedirectStandardOutput/-RedirectStandardError` 捕获输出，别用 `2>&1`——PowerShell 会把 node 的 stderr 包成 `NativeCommandError` 噪音。
+
+```powershell
+$ps = "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe"
+$launcher = "$env:LOCALAPPDATA\dsh-window-base\reapply.ps1"   # 上面那个小脚本
+Register-ScheduledTask -TaskName 'DSH window-base reapply' `
+  -Action (New-ScheduledTaskAction -Execute $ps -Argument "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$launcher`"") `
+  -Trigger (New-ScheduledTaskTrigger -AtLogOn -User "$env:USERDOMAIN\$env:USERNAME"),
+           (New-ScheduledTaskTrigger -Once -At (Get-Date).Date.AddMinutes(2) -RepetitionInterval (New-TimeSpan -Minutes 30) -RepetitionDuration (New-TimeSpan -Days 3650)) `
+  -Principal (New-ScheduledTaskPrincipal -UserId "$env:USERDOMAIN\$env:USERNAME" -LogonType Interactive -RunLevel Limited) `
+  -Settings (New-ScheduledTaskSettingsSet -StartWhenAvailable -MultipleInstances IgnoreNew -ExecutionTimeLimit (New-TimeSpan -Minutes 15)) `
+  -Description 'Re-applies the dsh-bg-theme window-base patch after a DSH update (idempotent)' -Force
+
+Unregister-ScheduledTask -TaskName 'DSH window-base reapply' -Confirm:$false   # 撤掉
+```
+
 ## 已知边界
 
 - **不是持久化的主题偏好。** 覆盖层不进 `ui-theme` 的 settings schema，每次加载由插件重新叠加；设置里的浅色/深色/字号仍然有效，并决定哪一套值生效。

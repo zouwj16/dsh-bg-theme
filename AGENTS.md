@@ -44,7 +44,7 @@ CI 已启用：`.github/workflows/verify.yml` 在 push / PR 时跑上面两项�
 - 干跑不带参数；`--apply` 才写，`--verify` 校验整个归档，`--revert [--apply]` 回滚，`--self-test` 用内置夹具自检。
 - 改写是等长的：`lib/main.js` 字节数不变、索引偏移不变、归档头里的 SHA-256 同步更新。脚本自己证明这一点——把两处插入摘掉、注释还原成原文本后必须逐字节等于原文件；写入前还会跑 `node --check` 过语法。
 - 回滚状态在 `<app.asar>.window-base-backup\`；归档与状态不符（例如产品升级过）时 `--revert` 拒绝写入。
-- 生效需要重启 Harness。产品升级会覆盖 `app.asar`，升级后重跑 `--apply`。
+- 生效需要重启 Harness。产品升级会覆盖 `app.asar`，升级后重跑 `--apply`；README 的「升级后自动重打」给了把它挂成计划任务（登录 + 每 30 分钟）的做法。
 - 只有产品改动导致锚点失效时脚本才会报错退出，那时按 `EDITS` 里的锚点与注释块重新对齐（不要改成按行号或偏移硬写）。
 
 ## 边界
